@@ -256,7 +256,7 @@ const ADMIN_DEFAULT_PIN = "159753";
 /* ============================================================ */
 
 let state = { role:null, guru:null, santri:null };
-let cache = { santri:{}, kelas:{}, guru:{}, laporan:{}, keluhan:{} };
+let cache = { santri:{}, kelas:{}, guru:{}, laporan:{}, keluhan:{}, materi:{} };
 
 /* ---------------- Firebase REST helpers ---------------- */
 function isConfigured(){ return !FIREBASE_DB_URL.includes("GANTI-DENGAN"); }
@@ -671,11 +671,11 @@ function closeModal(){ const m=document.getElementById("modalOverlay"); if(m) m.
 
 /* ---------------- Data loading ---------------- */
 async function loadAll(){
-  const [santri,kelas,guru,laporan,keluhan] = await Promise.all([
-    fbGet("santri"), fbGet("kelas"), fbGet("guru"), fbGet("laporan"), fbGet("keluhan")
+  const [santri,kelas,guru,laporan,keluhan,materi] = await Promise.all([
+    fbGet("santri"), fbGet("kelas"), fbGet("guru"), fbGet("laporan"), fbGet("keluhan"), fbGet("materiPenilaian")
   ]);
   cache.santri = santri||{}; cache.kelas = kelas||{}; cache.guru = guru||{};
-  cache.laporan = laporan||{}; cache.keluhan = keluhan||{};
+  cache.laporan = laporan||{}; cache.keluhan = keluhan||{}; cache.materi = materi||{};
 }
 
 /* ============================================================
@@ -708,11 +708,9 @@ function drawGuruTab(){
   if(guruTab==="keluhan") return renderGuruKeluhan(body);
 }
 
-let ratingVals = {hafalan:0,akhlak:0,kedisiplinan:0};
 function renderGuruInput(body){
   const kelasOpts = myKelasList().map(([id,k])=>`<option value="${id}" ${guruKelasFilter===id?"selected":""}>${esc(k.nama)}</option>`).join("");
   const santriOpts = mySantriList(guruKelasFilter).map(([id,s])=>`<option value="${id}">${esc(s.nama)}</option>`).join("");
-  ratingVals = {hafalan:0,akhlak:0,kedisiplinan:0};
   if(myKelasList().length===0){
     body.innerHTML = `<div class="empty-state"><div class="ic">🏷️</div>Anda belum ditugaskan ke kelas manapun. Hubungi Admin.</div>`; return;
   }
@@ -737,9 +735,9 @@ function renderGuruInput(body){
       </div>
       <div class="field"><label>Materi / Kegiatan Belajar</label><textarea id="giMateri" placeholder="Contoh: Iqro jilid 2 hal. 10-12, hafalan surat An-Nas"></textarea></div>
       <div class="card" style="background:var(--paper-alt);box-shadow:none;">
-        <div class="rating-row"><span class="lbl">Hafalan / Capaian Materi</span>${starPicker("hafalan")}</div>
-        <div class="rating-row"><span class="lbl">Akhlak</span>${starPicker("akhlak")}</div>
-        <div class="rating-row"><span class="lbl">Kedisiplinan</span>${starPicker("kedisiplinan")}</div>
+        <div class="section-title" style="margin-bottom:6px;"><h4 style="margin:0;">Item Penilaian</h4><button type="button" class="btn sm secondary" onclick="openMateriManager()">⚙ Kelola Item</button></div>
+        <p class="helptext" style="margin-top:0;">Isi nilai (0–100) untuk tiap item. Belum sesuai kebutuhan? Klik "Kelola Item" untuk menambah, mengubah, atau menghapus.</p>
+        <div id="nilaiRows">${renderNilaiRows()}</div>
       </div>
       <div class="field"><label>Catatan untuk Orang Tua</label><textarea id="giCatatan" placeholder="Catatan, pujian, atau hal yang perlu diperhatikan di rumah"></textarea></div>
       <div id="giErr" class="error-msg"></div>
@@ -747,14 +745,80 @@ function renderGuruInput(body){
     </div>
   `;
 }
-function starPicker(key){
-  return `<div class="stars" id="star-${key}">${[1,2,3,4,5].map(n=>`<button type="button" class="star-btn" data-k="${key}" data-n="${n}" onclick="setStar('${key}',${n})">★</button>`).join("")}</div>`;
+function renderNilaiRows(){
+  const entries = Object.entries(cache.materi);
+  if(entries.length===0){
+    return `<p class="helptext">Belum ada item penilaian. Klik "Kelola Item" di atas untuk menambahkan, misalnya "Hafalan", "Adab", atau "Kerapian Tulisan".</p>`;
+  }
+  return entries.map(([id,m])=>`
+    <div class="rating-row">
+      <span class="lbl">${esc(m.nama)}</span>
+      <input type="number" class="nilai-input" data-mid="${id}" min="0" max="100" step="1" placeholder="0-100" style="width:90px;text-align:center;">
+    </div>`).join("");
 }
-function setStar(key,n){
-  ratingVals[key]=n;
-  document.querySelectorAll(`#star-${key} .star-btn`).forEach(b=>{
-    b.classList.toggle("on", Number(b.dataset.n)<=n);
-  });
+function openMateriManager(){
+  openModal(`
+    <h3>Kelola Item Penilaian</h3>
+    <p class="helptext" style="margin-top:0;">Item ini akan muncul sebagai kolom nilai saat mengisi laporan harian.</p>
+    <div id="materiListModal">${renderMateriListModal()}</div>
+    <div class="field" style="margin-top:14px;">
+      <label>Tambah Item Baru</label>
+      <div class="row" style="align-items:flex-start;">
+        <input type="text" id="newMateriNama" placeholder="Contoh: Hafalan Surat">
+        <button type="button" class="btn gold" style="flex:0 0 auto;" onclick="addMateri()">+ Tambah</button>
+      </div>
+    </div>
+    <div id="materiErr" class="error-msg"></div>
+    <button class="btn secondary block" style="margin-top:14px;" onclick="closeMateriManager()">Selesai</button>
+  `);
+}
+function renderMateriListModal(){
+  const entries = Object.entries(cache.materi);
+  if(entries.length===0) return `<p class="helptext">Belum ada item penilaian.</p>`;
+  return entries.map(([id,m])=>`
+    <div class="list-item" style="padding:8px 0;">
+      <div class="item-top" id="materiRow-${id}">
+        <span style="font-weight:600;">${esc(m.nama)}</span>
+        <div class="item-actions">
+          <button type="button" class="btn sm secondary" onclick="editMateriInline('${id}')">Ubah</button>
+          <button type="button" class="btn sm danger" onclick="deleteMateri('${id}')">Hapus</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+function editMateriInline(id){
+  const m = cache.materi[id];
+  document.getElementById(`materiRow-${id}`).innerHTML = `
+    <input type="text" id="materiEdit-${id}" value="${esc(m.nama)}" style="flex:1;margin-right:8px;padding:8px 10px;">
+    <button type="button" class="btn sm gold" onclick="saveMateriInline('${id}')">Simpan</button>`;
+}
+async function saveMateriInline(id){
+  const nama = document.getElementById(`materiEdit-${id}`).value.trim();
+  if(!nama) return;
+  await fbPatch(`materiPenilaian/${id}`,{nama});
+  await loadAll();
+  document.getElementById("materiListModal").innerHTML = renderMateriListModal();
+}
+async function addMateri(){
+  const input = document.getElementById("newMateriNama");
+  const nama = input.value.trim();
+  const err = document.getElementById("materiErr");
+  if(!nama){ err.textContent="Nama item tidak boleh kosong."; return; }
+  err.textContent="";
+  await fbPost("materiPenilaian",{nama});
+  input.value="";
+  await loadAll();
+  document.getElementById("materiListModal").innerHTML = renderMateriListModal();
+}
+async function deleteMateri(id){
+  if(!confirm("Hapus item penilaian ini? Nilai yang sudah tersimpan pada laporan lama tidak akan terhapus.")) return;
+  await fbDelete(`materiPenilaian/${id}`);
+  await loadAll();
+  document.getElementById("materiListModal").innerHTML = renderMateriListModal();
+}
+function closeMateriManager(){
+  closeModal();
+  if(document.getElementById("nilaiRows")) document.getElementById("nilaiRows").innerHTML = renderNilaiRows();
 }
 function pickKeh(btn){
   document.querySelectorAll("#giKehadiran .keh-opt").forEach(b=>b.className="keh-opt");
@@ -775,9 +839,11 @@ async function submitLaporan(){
   const err = document.getElementById("giErr");
   if(!santriId){ err.textContent="Pilih santri terlebih dahulu."; return; }
   if(!tanggal){ err.textContent="Tanggal wajib diisi."; return; }
+  const penilaian = Array.from(document.querySelectorAll(".nilai-input"))
+    .map(inp=>({ id:inp.dataset.mid, nama: cache.materi[inp.dataset.mid]?.nama || "", nilai: inp.value==="" ? null : Number(inp.value) }))
+    .filter(p=>p.nilai!==null && !isNaN(p.nilai));
   const data = {
-    santriId, tanggal, kehadiran, materi, catatan,
-    hafalan:ratingVals.hafalan, akhlak:ratingVals.akhlak, kedisiplinan:ratingVals.kedisiplinan,
+    santriId, tanggal, kehadiran, materi, catatan, penilaian,
     guruId: state.guru.id, guruNama: state.guru.nama, createdAt: Date.now()
   };
   try{
@@ -815,7 +881,7 @@ function drawGuruRiwayatList(){
     <div class="list-item">
       <div class="item-top"><span class="item-title">${esc(s.nama)}</span><span class="item-date">${fmtDate(l.tanggal)}</span></div>
       <div class="item-meta"><span class="badge ${l.kehadiran}">${kehLabel(l.kehadiran)}</span> &nbsp;${esc(l.materi||"-")}</div>
-      <div class="item-meta">⭐ Hafalan ${l.hafalan||0}/5 • Akhlak ${l.akhlak||0}/5 • Disiplin ${l.kedisiplinan||0}/5</div>
+      ${(l.penilaian&&l.penilaian.length)?`<div class="item-meta">${l.penilaian.map(p=>`${esc(p.nama)}: <b>${p.nilai}</b>`).join(" &nbsp;•&nbsp; ")}</div>`:""}
       ${l.catatan?`<div class="item-meta">📝 ${esc(l.catatan)}</div>`:""}
       <div class="item-actions"><button class="btn sm danger" onclick="deleteLaporan('${id}')">Hapus</button></div>
     </div>`;
@@ -886,9 +952,7 @@ function renderOrtuRiwayat(body){
     <div class="notebook-card">
       <div class="item-top"><span class="item-date">${fmtDate(l.tanggal)}</span><span class="badge ${l.kehadiran}">${kehLabel(l.kehadiran)}</span></div>
       <div class="item-meta"><b>Materi:</b> ${esc(l.materi||"-")}</div>
-      <div class="rating-row"><span class="lbl">Hafalan</span>${renderStarsView(l.hafalan)}</div>
-      <div class="rating-row"><span class="lbl">Akhlak</span>${renderStarsView(l.akhlak)}</div>
-      <div class="rating-row"><span class="lbl">Kedisiplinan</span>${renderStarsView(l.kedisiplinan)}</div>
+      ${(l.penilaian&&l.penilaian.length) ? l.penilaian.map(p=>`<div class="rating-row"><span class="lbl">${esc(p.nama)}</span><b style="font-family:'Fraunces',serif;font-size:1.15rem;color:var(--green-deep);">${p.nilai}</b></div>`).join("") : ""}
       ${l.catatan?`<div class="item-meta">📝 <i>${esc(l.catatan)}</i></div>`:""}
       <div class="item-meta" style="margin-top:6px;color:var(--ink-soft);">Dicatat oleh: ${esc(l.guruNama||"-")}</div>
     </div>`).join("") || `<div class="empty-state"><div class="ic">🗒️</div>Belum ada laporan dari guru.</div>`;
@@ -896,10 +960,6 @@ function renderOrtuRiwayat(body){
     <div class="section-title"><h3 style="margin:0;">Riwayat Kegiatan Belajar</h3>${list.length?'<button class="btn sm secondary" onclick="exportOrtuPDF()">⬇ Unduh PDF</button>':''}</div>
     ${html}`;
   window._ortuLaporanList = list;
-}
-function renderStarsView(n){
-  n=n||0;
-  return `<div class="stars">${[1,2,3,4,5].map(i=>`<span class="star-btn ${i<=n?'on':''}">★</span>`).join("")}</div>`;
 }
 function renderOrtuKirim(body){
   body.innerHTML = `
@@ -949,7 +1009,9 @@ function exportOrtuPDF(){
     doc.setFont("helvetica","bold"); doc.text(`${fmtDate(l.tanggal)} — ${kehLabel(l.kehadiran)}`,14,y); y+=6;
     doc.setFont("helvetica","normal");
     const materi = doc.splitTextToSize(`Materi: ${l.materi||"-"}`,180); doc.text(materi,14,y); y+=materi.length*5;
-    doc.text(`Hafalan ${l.hafalan||0}/5  Akhlak ${l.akhlak||0}/5  Disiplin ${l.kedisiplinan||0}/5`,14,y); y+=6;
+    if(l.penilaian && l.penilaian.length){
+      doc.text(l.penilaian.map(p=>`${p.nama}: ${p.nilai}`).join("   "),14,y); y+=6;
+    }
     if(l.catatan){ const c=doc.splitTextToSize(`Catatan: ${l.catatan}`,180); doc.text(c,14,y); y+=c.length*5; }
     y+=4;
   });
