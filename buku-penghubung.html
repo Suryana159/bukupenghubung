@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Penghubung — Guru &amp; Orang Tua</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --paper:#EFE6D3;
+  --paper-alt:#E7DBC0;
+  --paper-deep:#DCCDA9;
+  --ink:#2B2620;
+  --ink-soft:#6b6152;
+  --green:#1F4D3A;
+  --green-deep:#163a2b;
+  --green-light:#3D8361;
+  --gold:#B08D57;
+  --gold-light:#d8c398;
+  --red:#B4402D;
+  --amber:#C98A2B;
+  --blue:#5B7A99;
+  --white:#FFFDF8;
+  --radius:14px;
+  --shadow:0 4px 14px rgba(43,38,32,0.12);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(43,38,32,0.05) 1px, transparent 0);
+  background-size:22px 22px;
+  color:var(--ink);
+  font-family:'Public Sans',system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  min-height:100vh;
+}
+h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;margin:0 0 6px;color:var(--green-deep);}
+.mono{font-family:'JetBrains Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:16px;}
+.hidden{display:none !important;}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  background:var(--green-deep);
+  color:var(--white);
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:50;
+}
+.topbar .brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-weight:700;color:var(--green-deep);
+  flex-shrink:0;
+}
+.brand-text{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;line-height:1.2;}
+.brand-text small{display:block;font-family:'Public Sans';font-weight:400;font-size:0.72rem;color:var(--gold-light);}
+.topbar .who{font-size:0.85rem;text-align:right;}
+.topbar .who b{display:block;font-family:'Fraunces',serif;font-size:1rem;}
+.logout-btn{
+  background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);
+  color:var(--white);padding:8px 14px;border-radius:8px;font-size:0.85rem;font-weight:600;
+  margin-left:12px;
+}
+.logout-btn:hover{background:rgba(255,255,255,0.22);}
+
+.wrap{max-width:920px;margin:0 auto;padding:22px 16px 60px;}
+
+/* ---------- Config banner ---------- */
+.config-banner{
+  background:#fff3ea;border:1.5px solid var(--red);color:var(--red);
+  padding:14px 16px;border-radius:10px;margin:16px;font-size:0.9rem;font-weight:600;
+}
+.config-banner code{background:rgba(180,64,45,0.12);padding:2px 6px;border-radius:5px;}
+
+/* ---------- Notebook "spiral" card ---------- */
+.notebook-card{
+  background:var(--white);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  position:relative;
+  padding:20px 20px 20px 34px;
+  margin-bottom:16px;
+  border:1px solid rgba(43,38,32,0.06);
+}
+.notebook-card::before{
+  content:"";
+  position:absolute;left:0;top:0;bottom:0;width:14px;
+  background-image:radial-gradient(circle, var(--paper-deep) 3px, transparent 3.2px);
+  background-size:14px 16px;
+  background-position:center 6px;
+  border-right:1px dashed rgba(43,38,32,0.15);
+}
+.card{
+  background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:20px;margin-bottom:16px;border:1px solid rgba(43,38,32,0.06);
+}
+
+/* ---------- Login ---------- */
+.login-hero{text-align:center;padding:36px 16px 10px;}
+.login-hero h1{font-size:1.9rem;}
+.login-hero p{color:var(--ink-soft);max-width:440px;margin:6px auto 0;}
+.role-grid{display:grid;grid-template-columns:1fr;gap:14px;max-width:460px;margin:26px auto 0;}
+@media(min-width:640px){.role-grid{grid-template-columns:repeat(3,1fr);max-width:none;}}
+.role-card{
+  background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:22px 16px;text-align:center;border:2px solid transparent;
+  transition:transform .15s, border-color .15s;
+}
+.role-card:hover{transform:translateY(-3px);border-color:var(--gold);}
+.role-card .ic{font-size:2rem;margin-bottom:8px;}
+.role-card h3{margin-bottom:4px;font-size:1.05rem;}
+.role-card p{font-size:0.82rem;color:var(--ink-soft);margin:0;}
+
+.login-form{max-width:380px;margin:24px auto 0;}
+.login-form label{display:block;font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--green-deep);}
+.field{margin-bottom:16px;}
+input[type=text],input[type=password],input[type=date],input[type=tel],select,textarea{
+  width:100%;padding:11px 13px;border:1.5px solid var(--paper-deep);border-radius:9px;
+  background:var(--white);color:var(--ink);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green-light);outline-offset:1px;}
+textarea{min-height:90px;resize:vertical;}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 20px;border-radius:9px;border:none;font-weight:700;font-size:0.92rem;
+  background:var(--green);color:var(--white);
+}
+.btn:hover{background:var(--green-deep);}
+.btn.block{width:100%;}
+.btn.secondary{background:var(--white);color:var(--green-deep);border:1.5px solid var(--green);}
+.btn.secondary:hover{background:var(--paper-alt);}
+.btn.gold{background:var(--gold);color:var(--green-deep);}
+.btn.gold:hover{background:var(--gold-light);}
+.btn.danger{background:var(--red);color:var(--white);}
+.btn.sm{padding:7px 12px;font-size:0.8rem;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.back-link{background:none;border:none;color:var(--ink-soft);font-size:0.85rem;font-weight:600;margin-bottom:14px;text-decoration:underline;padding:0;}
+
+.error-msg{color:var(--red);font-size:0.85rem;font-weight:600;margin-top:6px;}
+.success-msg{color:var(--green-light);font-size:0.85rem;font-weight:600;margin-top:6px;}
+
+/* ---------- Tabs ---------- */
+.tabbar{display:flex;gap:6px;overflow-x:auto;margin-bottom:18px;padding-bottom:2px;}
+.tab-btn{
+  background:var(--paper-alt);border:none;padding:10px 16px;border-radius:10px 10px 0 0;
+  font-weight:700;font-size:0.85rem;color:var(--ink-soft);white-space:nowrap;
+  border-bottom:3px solid transparent;
+}
+.tab-btn.active{background:var(--white);color:var(--green-deep);border-bottom:3px solid var(--gold);}
+
+/* ---------- Misc ---------- */
+.row{display:flex;gap:12px;flex-wrap:wrap;}
+.row > *{flex:1;min-width:140px;}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:0.72rem;font-weight:700;}
+.badge.hadir{background:#e2f3ea;color:var(--green-light);}
+.badge.izin{background:#fbeed9;color:var(--amber);}
+.badge.sakit{background:#e4edf3;color:var(--blue);}
+.badge.alpa{background:#fbe4df;color:var(--red);}
+.badge.baru{background:#fbe4df;color:var(--red);}
+.badge.dibalas{background:#e2f3ea;color:var(--green-light);}
+.kehadiran-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.keh-opt{
+  flex:1;min-width:80px;padding:10px 8px;text-align:center;border-radius:9px;
+  border:1.5px solid var(--paper-deep);font-weight:700;font-size:0.85rem;background:var(--white);
+}
+.keh-opt.sel-hadir{background:#e2f3ea;border-color:var(--green-light);color:var(--green-light);}
+.keh-opt.sel-izin{background:#fbeed9;border-color:var(--amber);color:var(--amber);}
+.keh-opt.sel-sakit{background:#e4edf3;border-color:var(--blue);color:var(--blue);}
+.keh-opt.sel-alpa{background:#fbe4df;border-color:var(--red);color:var(--red);}
+
+.stars{display:flex;gap:4px;}
+.star-btn{background:none;border:none;font-size:1.5rem;color:var(--paper-deep);padding:0;line-height:1;}
+.star-btn.on{color:var(--gold);}
+.rating-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-bottom:1px dashed var(--paper-deep);}
+.rating-row:last-child{border-bottom:none;}
+.rating-row .lbl{font-weight:600;font-size:0.9rem;}
+
+.list-item{
+  padding:14px 0;border-bottom:1px solid var(--paper-alt);
+}
+.list-item:last-child{border-bottom:none;}
+.item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.item-title{font-weight:700;font-family:'Fraunces',serif;font-size:1.05rem;color:var(--green-deep);}
+.item-date{font-size:0.78rem;color:var(--ink-soft);font-weight:600;}
+.item-meta{font-size:0.85rem;color:var(--ink-soft);margin-bottom:4px;}
+.item-actions{display:flex;gap:6px;margin-top:8px;}
+
+.empty-state{text-align:center;padding:40px 16px;color:var(--ink-soft);}
+.empty-state .ic{font-size:2.4rem;margin-bottom:8px;}
+
+.code-chip{
+  display:inline-block;background:var(--green-deep);color:var(--gold-light);
+  padding:6px 12px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:2px;
+}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--paper-alt);}
+th{color:var(--ink-soft);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.4px;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px;}
+@media(min-width:640px){.stat-grid{grid-template-columns:repeat(4,1fr);}}
+.stat-box{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;text-align:center;}
+.stat-box .num{font-family:'Fraunces',serif;font-size:1.8rem;color:var(--green-deep);font-weight:700;}
+.stat-box .lbl{font-size:0.75rem;color:var(--ink-soft);font-weight:600;}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(43,38,32,0.5);display:flex;align-items:center;justify-content:center;
+  padding:16px;z-index:100;
+}
+.modal-box{background:var(--white);border-radius:var(--radius);padding:22px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;}
+
+.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.helptext{font-size:0.8rem;color:var(--ink-soft);margin-top:4px;}
+footer{text-align:center;color:var(--ink-soft);font-size:0.75rem;padding:20px;}
+</style>
+</head>
+<body>
+
+<div id="configBanner" class="hidden config-banner">
+  ⚠️ Firebase belum dikonfigurasi. Buka file HTML ini di editor, cari <code>FIREBASE_DB_URL</code> di bagian bawah, dan ganti dengan Database URL project Firebase Anda.
+</div>
+
+<div id="topbar" class="topbar hidden">
+  <div class="brand">
+    <div class="brand-mark">BP</div>
+    <div class="brand-text">Buku Penghubung<small id="topbarSub">-</small></div>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="who"><b id="whoName">-</b><span id="whoRole">-</span></div>
+    <button class="logout-btn" onclick="logout()">Keluar</button>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<footer>Buku Penghubung — Guru &amp; Orang Tua &nbsp;•&nbsp; Made By : Suryana</footer>
+
+<script>
+/* ============================================================
+   KONFIGURASI — GANTI BAGIAN INI DENGAN PROJECT FIREBASE ANDA
+   ============================================================ */
+const FIREBASE_DB_URL = "https://buku-penghubung-23f78-default-rtdb.asia-southeast1.firebasedatabase.app";
+const APP_NAME = "TPA / Sekolah Anda";
+const ADMIN_DEFAULT_PIN = "159753";
+/* ============================================================ */
+
+let state = { role:null, guru:null, santri:null };
+let cache = { santri:{}, kelas:{}, guru:{}, laporan:{}, keluhan:{} };
+
+/* ---------------- Firebase REST helpers ---------------- */
+function isConfigured(){ return !FIREBASE_DB_URL.includes("GANTI-DENGAN"); }
+async function fbGet(path){
+  const r = await fetch(`${FIREBASE_DB_URL}/${path}.json`);
+  if(!r.ok) throw new Error("Gagal mengambil data");
+  return await r.json();
+}
+async function fbPost(path,data){
+  const r = await fetch(`${FIREBASE_DB_URL}/${path}.json`,{method:"POST",body:JSON.stringify(data)});
+  if(!r.ok) throw new Error("Gagal menyimpan data");
+  return await r.json();
+}
+async function fbPut(path,data){
+  const r = await fetch(`${FIREBASE_DB_URL}/${path}.json`,{method:"PUT",body:JSON.stringify(data)});
+  if(!r.ok) throw new Error("Gagal menyimpan data");
+  return await r.json();
+}
+async function fbPatch(path,data){
+  const r = await fetch(`${FIREBASE_DB_URL}/${path}.json`,{method:"PATCH",body:JSON.stringify(data)});
+  if(!r.ok) throw new Error("Gagal memperbarui data");
+  return await r.json();
+}
+async function fbDelete(path){
+  const r = await fetch(`${FIREBASE_DB_URL}/${path}.json`,{method:"DELETE"});
+  if(!r.ok) throw new Error("Gagal menghapus data");
+  return await r.json();
+}
+
+/* ---------------- Utilities ---------------- */
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function genKode(){ return String(Math.floor(100000+Math.random()*900000)); }
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtDate(s){
+  if(!s) return "-";
+  const d=new Date(s+"T00:00:00");
+  const bulan=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+}
+function esc(s){ return (s||"").toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function kehLabel(k){ return {hadir:"Hadir",izin:"Izin",sakit:"Sakit",alpa:"Alpa"}[k]||k; }
+function toast(msg,ok=true){
+  const el=document.createElement("div");
+  el.textContent=msg;
+  el.style.cssText=`position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:${ok?"#1F4D3A":"#B4402D"};color:#fff;padding:11px 20px;border-radius:9px;font-weight:700;font-size:0.85rem;z-index:999;box-shadow:0 4px 14px rgba(0,0,0,0.2);`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2600);
+}
+
+/* ---------------- App bootstrap ---------------- */
+const appEl = document.getElementById("app");
+function render(html){ appEl.innerHTML = html; window.scrollTo(0,0); }
+
+async function init(){
+  if(!isConfigured()){
+    document.getElementById("configBanner").classList.remove("hidden");
+  }
+  document.getElementById("topbarSub").textContent = " — " + APP_NAME;
+  renderLogin();
+}
+
+function logout(){
+  state = { role:null, guru:null, santri:null };
+  document.getElementById("topbar").classList.add("hidden");
+  renderLogin();
+}
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+function renderLogin(){
+  render(`
+    <div class="login-hero">
+      <h1>📖 Buku Penghubung</h1>
+      <p>Jembatan komunikasi harian antara guru dan orang tua/wali santri mengenai kegiatan belajar, perkembangan, keluhan, dan saran.</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="renderAdminLogin()">
+        <div class="ic">🗂️</div><h3>Admin</h3>
+        <p>Kelola data santri, kelas &amp; guru</p>
+      </div>
+      <div class="role-card" onclick="renderGuruLogin()">
+        <div class="ic">🧑‍🏫</div><h3>Guru</h3>
+        <p>Isi laporan harian &amp; balas keluhan</p>
+      </div>
+      <div class="role-card" onclick="renderOrtuLogin()">
+        <div class="ic">👨‍👩‍👧</div><h3>Orang Tua</h3>
+        <p>Lihat perkembangan &amp; kirim masukan</p>
+      </div>
+    </div>
+  `);
+}
+
+function renderAdminLogin(){
+  render(`
+    <button class="back-link" onclick="renderLogin()">← Kembali</button>
+    <div class="card login-form">
+      <h2>Masuk sebagai Admin</h2>
+      <div class="field">
+        <label>PIN Admin</label>
+        <input type="password" id="adminPin" placeholder="Masukkan PIN" inputmode="numeric">
+      </div>
+      <div id="adminLoginErr" class="error-msg"></div>
+      <button class="btn block" onclick="doAdminLogin()">Masuk</button>
+    </div>
+  `);
+  document.getElementById("adminPin").focus();
+}
+async function doAdminLogin(){
+  const pin = document.getElementById("adminPin").value.trim();
+  try{
+    let saved = await fbGet("settings/adminPin");
+    if(!saved) saved = ADMIN_DEFAULT_PIN;
+    if(pin === saved){
+      state.role="admin";
+      showTopbar("Admin","Administrator");
+      renderAdminDash();
+    } else {
+      document.getElementById("adminLoginErr").textContent="PIN salah. Coba lagi.";
+    }
+  }catch(e){ document.getElementById("adminLoginErr").textContent="Gagal terhubung. Periksa konfigurasi Firebase."; }
+}
+
+async function renderGuruLogin(){
+  render(`
+    <button class="back-link" onclick="renderLogin()">← Kembali</button>
+    <div class="card login-form"><h2>Masuk sebagai Guru</h2><p class="helptext">Memuat daftar guru...</p></div>
+  `);
+  try{
+    const guruData = await fbGet("guru") || {};
+    cache.guru = guruData;
+    const opts = Object.entries(guruData).map(([id,g])=>`<option value="${id}">${esc(g.nama)}</option>`).join("");
+    render(`
+      <button class="back-link" onclick="renderLogin()">← Kembali</button>
+      <div class="card login-form">
+        <h2>Masuk sebagai Guru</h2>
+        <div class="field">
+          <label>Nama Guru</label>
+          <select id="guruSelect"><option value="">— Pilih nama —</option>${opts}</select>
+        </div>
+        <div class="field">
+          <label>PIN</label>
+          <input type="password" id="guruPin" placeholder="Masukkan PIN" inputmode="numeric">
+        </div>
+        <div id="guruLoginErr" class="error-msg"></div>
+        <button class="btn block" onclick="doGuruLogin()">Masuk</button>
+        ${opts===""?'<p class="helptext">Belum ada data guru. Hubungi Admin untuk didaftarkan.</p>':''}
+      </div>
+    `);
+  }catch(e){
+    render(`<button class="back-link" onclick="renderLogin()">← Kembali</button><div class="card login-form"><p class="error-msg">Gagal memuat data. Periksa konfigurasi Firebase.</p></div>`);
+  }
+}
+function doGuruLogin(){
+  const id = document.getElementById("guruSelect").value;
+  const pin = document.getElementById("guruPin").value.trim();
+  const err = document.getElementById("guruLoginErr");
+  if(!id){ err.textContent="Pilih nama guru terlebih dahulu."; return; }
+  const g = cache.guru[id];
+  if(g && g.pin === pin){
+    state.role="guru"; state.guru={id,...g};
+    showTopbar(g.nama,"Guru");
+    renderGuruDash();
+  } else { err.textContent="PIN salah."; }
+}
+
+function renderOrtuLogin(){
+  render(`
+    <button class="back-link" onclick="renderLogin()">← Kembali</button>
+    <div class="card login-form">
+      <h2>Masuk sebagai Orang Tua</h2>
+      <div class="field">
+        <label>Kode Akses Anak</label>
+        <input type="text" id="ortuKode" placeholder="Contoh: 384021" inputmode="numeric" maxlength="6">
+        <p class="helptext">Kode akses 6 digit diberikan oleh pihak sekolah/TPA saat pendaftaran.</p>
+      </div>
+      <div id="ortuLoginErr" class="error-msg"></div>
+      <button class="btn block" onclick="doOrtuLogin()">Masuk</button>
+    </div>
+  `);
+  document.getElementById("ortuKode").focus();
+}
+async function doOrtuLogin(){
+  const kode = document.getElementById("ortuKode").value.trim();
+  const err = document.getElementById("ortuLoginErr");
+  if(!kode){ err.textContent="Masukkan kode akses."; return; }
+  try{
+    const santriData = await fbGet("santri") || {};
+    cache.santri = santriData;
+    const found = Object.entries(santriData).find(([id,s])=>s.kodeAkses===kode && s.aktif!==false);
+    if(found){
+      const [id,s]=found;
+      state.role="ortu"; state.santri={id,...s};
+      showTopbar(s.namaOrtu||s.nama, `Orang tua/wali dari ${s.nama}`);
+      renderOrtuDash();
+    } else { err.textContent="Kode akses tidak ditemukan atau tidak aktif."; }
+  }catch(e){ err.textContent="Gagal terhubung. Periksa konfigurasi Firebase."; }
+}
+
+function showTopbar(name,role){
+  document.getElementById("topbar").classList.remove("hidden");
+  document.getElementById("whoName").textContent=name;
+  document.getElementById("whoRole").textContent=role;
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+let adminTab = "kelas";
+async function renderAdminDash(){
+  await loadAll();
+  render(`
+    <div class="stat-grid">
+      <div class="stat-box"><div class="num">${Object.keys(cache.santri).length}</div><div class="lbl">Santri</div></div>
+      <div class="stat-box"><div class="num">${Object.keys(cache.guru).length}</div><div class="lbl">Guru</div></div>
+      <div class="stat-box"><div class="num">${Object.keys(cache.kelas).length}</div><div class="lbl">Kelas</div></div>
+      <div class="stat-box"><div class="num">${Object.values(cache.keluhan).filter(k=>k.status!=="Dibalas").length}</div><div class="lbl">Keluhan Baru</div></div>
+    </div>
+    <div class="tabbar">
+      <button class="tab-btn ${adminTab==='kelas'?'active':''}" onclick="switchAdminTab('kelas')">Kelas</button>
+      <button class="tab-btn ${adminTab==='santri'?'active':''}" onclick="switchAdminTab('santri')">Santri</button>
+      <button class="tab-btn ${adminTab==='guru'?'active':''}" onclick="switchAdminTab('guru')">Guru</button>
+      <button class="tab-btn ${adminTab==='pin'?'active':''}" onclick="switchAdminTab('pin')">PIN Admin</button>
+    </div>
+    <div id="adminTabBody"></div>
+  `);
+  drawAdminTab();
+}
+function switchAdminTab(t){ adminTab=t; drawAdminTab(); }
+function drawAdminTab(){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  const body = document.getElementById("adminTabBody");
+  if(adminTab==="kelas") return renderAdminKelas(body);
+  if(adminTab==="santri") return renderAdminSantri(body);
+  if(adminTab==="guru") return renderAdminGuru(body);
+  if(adminTab==="pin") return renderAdminPin(body);
+}
+
+function renderAdminKelas(body){
+  const rows = Object.entries(cache.kelas).map(([id,k])=>`
+    <div class="list-item">
+      <div class="item-top">
+        <span class="item-title">${esc(k.nama)}</span>
+        <div class="item-actions">
+          <button class="btn sm secondary" onclick="editKelas('${id}')">Ubah</button>
+          <button class="btn sm danger" onclick="deleteKelas('${id}')">Hapus</button>
+        </div>
+      </div>
+      <div class="item-meta">${Object.values(cache.santri).filter(s=>s.kelasId===id).length} santri terdaftar</div>
+    </div>
+  `).join("") || `<div class="empty-state"><div class="ic">🏷️</div>Belum ada kelas. Tambahkan kelas pertama.</div>`;
+  body.innerHTML = `
+    <div class="card">
+      <div class="section-title"><h3>Daftar Kelas</h3><button class="btn sm gold" onclick="editKelas()">+ Tambah Kelas</button></div>
+      ${rows}
+    </div>`;
+}
+function editKelas(id){
+  const k = id ? cache.kelas[id] : {nama:""};
+  openModal(`
+    <h3>${id?"Ubah":"Tambah"} Kelas</h3>
+    <div class="field"><label>Nama Kelas</label><input type="text" id="mKelasNama" value="${esc(k.nama)}" placeholder="Contoh: Iqro 2 / TPQ A"></div>
+    <div id="mErr" class="error-msg"></div>
+    <div class="row"><button class="btn secondary block" onclick="closeModal()">Batal</button><button class="btn block" onclick="saveKelas('${id||''}')">Simpan</button></div>
+  `);
+}
+async function saveKelas(id){
+  const nama = document.getElementById("mKelasNama").value.trim();
+  if(!nama){ document.getElementById("mErr").textContent="Nama kelas wajib diisi."; return; }
+  try{
+    if(id){ await fbPatch(`kelas/${id}`,{nama}); } else { await fbPost("kelas",{nama}); }
+    closeModal(); toast("Kelas disimpan"); await loadAll(); drawAdminTab();
+  }catch(e){ document.getElementById("mErr").textContent="Gagal menyimpan."; }
+}
+async function deleteKelas(id){
+  if(!confirm("Hapus kelas ini? Santri di kelas ini tidak akan otomatis terhapus.")) return;
+  await fbDelete(`kelas/${id}`); toast("Kelas dihapus"); await loadAll(); drawAdminTab();
+}
+
+function renderAdminSantri(body){
+  const kelasOpts = Object.entries(cache.kelas).map(([id,k])=>`<option value="${id}">${esc(k.nama)}</option>`).join("");
+  const rows = Object.entries(cache.santri).map(([id,s])=>`
+    <div class="list-item">
+      <div class="item-top">
+        <span class="item-title">${esc(s.nama)}</span>
+        <span class="code-chip">${s.kodeAkses}</span>
+      </div>
+      <div class="item-meta">${esc(cache.kelas[s.kelasId]?.nama || "Belum ada kelas")} • Ortu/Wali: ${esc(s.namaOrtu||"-")} ${s.noHP?("• "+esc(s.noHP)):""} ${s.aktif===false?'<span class="badge alpa">Nonaktif</span>':''}</div>
+      <div class="item-actions">
+        <button class="btn sm secondary" onclick="editSantri('${id}')">Ubah</button>
+        <button class="btn sm danger" onclick="deleteSantri('${id}')">Hapus</button>
+      </div>
+    </div>
+  `).join("") || `<div class="empty-state"><div class="ic">🧒</div>Belum ada data santri.</div>`;
+  body.innerHTML = `
+    <div class="card">
+      <div class="section-title"><h3>Daftar Santri</h3><button class="btn sm gold" onclick="editSantri()" ${Object.keys(cache.kelas).length===0?'disabled title="Tambahkan kelas dulu"':''}>+ Tambah Santri</button></div>
+      ${Object.keys(cache.kelas).length===0?'<p class="helptext">Buat kelas terlebih dahulu di tab Kelas.</p>':''}
+      ${rows}
+    </div>`;
+}
+function editSantri(id){
+  const s = id ? cache.santri[id] : {nama:"",kelasId:"",namaOrtu:"",noHP:"",aktif:true,kodeAkses:genKode()};
+  const kelasOpts = Object.entries(cache.kelas).map(([kid,k])=>`<option value="${kid}" ${s.kelasId===kid?"selected":""}>${esc(k.nama)}</option>`).join("");
+  openModal(`
+    <h3>${id?"Ubah":"Tambah"} Santri</h3>
+    <div class="field"><label>Nama Santri</label><input type="text" id="mSNama" value="${esc(s.nama)}"></div>
+    <div class="field"><label>Kelas</label><select id="mSKelas"><option value="">— Pilih kelas —</option>${kelasOpts}</select></div>
+    <div class="field"><label>Nama Orang Tua/Wali</label><input type="text" id="mSOrtu" value="${esc(s.namaOrtu)}"></div>
+    <div class="field"><label>No. HP Orang Tua/Wali</label><input type="tel" id="mSHP" value="${esc(s.noHP)}"></div>
+    <div class="field"><label>Kode Akses (untuk orang tua)</label><input type="text" id="mSKode" value="${esc(s.kodeAkses)}" class="mono"></div>
+    <div class="field"><label><input type="checkbox" id="mSAktif" ${s.aktif!==false?"checked":""} style="width:auto;margin-right:6px;">Aktif</label></div>
+    <div id="mErr" class="error-msg"></div>
+    <div class="row"><button class="btn secondary block" onclick="closeModal()">Batal</button><button class="btn block" onclick="saveSantri('${id||''}')">Simpan</button></div>
+  `);
+}
+async function saveSantri(id){
+  const nama = document.getElementById("mSNama").value.trim();
+  const kelasId = document.getElementById("mSKelas").value;
+  const namaOrtu = document.getElementById("mSOrtu").value.trim();
+  const noHP = document.getElementById("mSHP").value.trim();
+  const kodeAkses = document.getElementById("mSKode").value.trim();
+  const aktif = document.getElementById("mSAktif").checked;
+  if(!nama||!kelasId){ document.getElementById("mErr").textContent="Nama dan kelas wajib diisi."; return; }
+  const data = {nama,kelasId,namaOrtu,noHP,kodeAkses,aktif};
+  try{
+    if(id){ await fbPatch(`santri/${id}`,data); } else { await fbPost("santri",data); }
+    closeModal(); toast("Data santri disimpan"); await loadAll(); drawAdminTab();
+  }catch(e){ document.getElementById("mErr").textContent="Gagal menyimpan."; }
+}
+async function deleteSantri(id){
+  if(!confirm("Hapus data santri ini beserta riwayat? Tindakan ini tidak dapat dibatalkan.")) return;
+  await fbDelete(`santri/${id}`); toast("Data santri dihapus"); await loadAll(); drawAdminTab();
+}
+
+function renderAdminGuru(body){
+  const kelasChecks = (selected=[]) => Object.entries(cache.kelas).map(([id,k])=>`
+    <label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-weight:400;">
+      <input type="checkbox" class="mGKelasChk" value="${id}" ${selected.includes(id)?"checked":""} style="width:auto;">${esc(k.nama)}
+    </label>`).join("");
+  const rows = Object.entries(cache.guru).map(([id,g])=>`
+    <div class="list-item">
+      <div class="item-top"><span class="item-title">${esc(g.nama)}</span></div>
+      <div class="item-meta">Kelas: ${(g.kelasIds||[]).map(kid=>esc(cache.kelas[kid]?.nama||"?")).join(", ")||"-"}</div>
+      <div class="item-actions">
+        <button class="btn sm secondary" onclick="editGuru('${id}')">Ubah</button>
+        <button class="btn sm danger" onclick="deleteGuru('${id}')">Hapus</button>
+      </div>
+    </div>
+  `).join("") || `<div class="empty-state"><div class="ic">🧑‍🏫</div>Belum ada data guru.</div>`;
+  body.innerHTML = `
+    <div class="card">
+      <div class="section-title"><h3>Daftar Guru</h3><button class="btn sm gold" onclick="editGuru()">+ Tambah Guru</button></div>
+      ${rows}
+    </div>`;
+  window._kelasChecksFn = kelasChecks;
+}
+function editGuru(id){
+  const g = id ? cache.guru[id] : {nama:"",pin:"159753",kelasIds:[]};
+  openModal(`
+    <h3>${id?"Ubah":"Tambah"} Guru</h3>
+    <div class="field"><label>Nama Guru</label><input type="text" id="mGNama" value="${esc(g.nama)}"></div>
+    <div class="field"><label>PIN Login</label><input type="text" id="mGPin" value="${esc(g.pin)}" class="mono"></div>
+    <div class="field"><label>Kelas yang Diampu</label>${window._kelasChecksFn(g.kelasIds||[])}</div>
+    <div id="mErr" class="error-msg"></div>
+    <div class="row"><button class="btn secondary block" onclick="closeModal()">Batal</button><button class="btn block" onclick="saveGuru('${id||''}')">Simpan</button></div>
+  `);
+}
+async function saveGuru(id){
+  const nama = document.getElementById("mGNama").value.trim();
+  const pin = document.getElementById("mGPin").value.trim();
+  const kelasIds = Array.from(document.querySelectorAll(".mGKelasChk:checked")).map(c=>c.value);
+  if(!nama||!pin){ document.getElementById("mErr").textContent="Nama dan PIN wajib diisi."; return; }
+  const data = {nama,pin,kelasIds};
+  try{
+    if(id){ await fbPatch(`guru/${id}`,data); } else { await fbPost("guru",data); }
+    closeModal(); toast("Data guru disimpan"); await loadAll(); drawAdminTab();
+  }catch(e){ document.getElementById("mErr").textContent="Gagal menyimpan."; }
+}
+async function deleteGuru(id){
+  if(!confirm("Hapus data guru ini?")) return;
+  await fbDelete(`guru/${id}`); toast("Data guru dihapus"); await loadAll(); drawAdminTab();
+}
+
+function renderAdminPin(body){
+  body.innerHTML = `
+    <div class="card login-form" style="margin:0;">
+      <h3>Ganti PIN Admin</h3>
+      <div class="field"><label>PIN Baru</label><input type="text" id="newAdminPin" class="mono" placeholder="Minimal 4 digit"></div>
+      <div id="pinErr" class="error-msg"></div>
+      <div id="pinOk" class="success-msg"></div>
+      <button class="btn" onclick="changeAdminPin()">Simpan PIN Baru</button>
+    </div>`;
+}
+async function changeAdminPin(){
+  const pin = document.getElementById("newAdminPin").value.trim();
+  if(pin.length<4){ document.getElementById("pinErr").textContent="PIN minimal 4 digit."; return; }
+  await fbPut("settings/adminPin",pin);
+  document.getElementById("pinErr").textContent="";
+  document.getElementById("pinOk").textContent="PIN berhasil diperbarui.";
+}
+
+/* ---------------- Modal helper ---------------- */
+function openModal(html){
+  const ov = document.createElement("div");
+  ov.className="modal-overlay"; ov.id="modalOverlay";
+  ov.innerHTML=`<div class="modal-box">${html}</div>`;
+  ov.addEventListener("click",(e)=>{ if(e.target===ov) closeModal(); });
+  document.body.appendChild(ov);
+}
+function closeModal(){ const m=document.getElementById("modalOverlay"); if(m) m.remove(); }
+
+/* ---------------- Data loading ---------------- */
+async function loadAll(){
+  const [santri,kelas,guru,laporan,keluhan] = await Promise.all([
+    fbGet("santri"), fbGet("kelas"), fbGet("guru"), fbGet("laporan"), fbGet("keluhan")
+  ]);
+  cache.santri = santri||{}; cache.kelas = kelas||{}; cache.guru = guru||{};
+  cache.laporan = laporan||{}; cache.keluhan = keluhan||{};
+}
+
+/* ============================================================
+   GURU DASHBOARD
+   ============================================================ */
+let guruTab="input", guruKelasFilter="", guruSantriFilter="";
+async function renderGuruDash(){
+  await loadAll();
+  const myKelas = (state.guru.kelasIds||[]);
+  render(`
+    <div class="tabbar">
+      <button class="tab-btn ${guruTab==='input'?'active':''}" onclick="switchGuruTab('input')">Input Laporan</button>
+      <button class="tab-btn ${guruTab==='riwayat'?'active':''}" onclick="switchGuruTab('riwayat')">Riwayat</button>
+      <button class="tab-btn ${guruTab==='keluhan'?'active':''}" onclick="switchGuruTab('keluhan')">Keluhan &amp; Saran</button>
+    </div>
+    <div id="guruTabBody"></div>
+  `);
+  drawGuruTab();
+}
+function switchGuruTab(t){ guruTab=t; drawGuruTab(); }
+function myKelasList(){ return Object.entries(cache.kelas).filter(([id])=>(state.guru.kelasIds||[]).includes(id)); }
+function mySantriList(kelasId){
+  return Object.entries(cache.santri).filter(([id,s])=> (state.guru.kelasIds||[]).includes(s.kelasId) && (!kelasId || s.kelasId===kelasId) && s.aktif!==false);
+}
+
+function drawGuruTab(){
+  const body = document.getElementById("guruTabBody");
+  if(guruTab==="input") return renderGuruInput(body);
+  if(guruTab==="riwayat") return renderGuruRiwayat(body);
+  if(guruTab==="keluhan") return renderGuruKeluhan(body);
+}
+
+let ratingVals = {hafalan:0,akhlak:0,kedisiplinan:0};
+function renderGuruInput(body){
+  const kelasOpts = myKelasList().map(([id,k])=>`<option value="${id}" ${guruKelasFilter===id?"selected":""}>${esc(k.nama)}</option>`).join("");
+  const santriOpts = mySantriList(guruKelasFilter).map(([id,s])=>`<option value="${id}">${esc(s.nama)}</option>`).join("");
+  ratingVals = {hafalan:0,akhlak:0,kedisiplinan:0};
+  if(myKelasList().length===0){
+    body.innerHTML = `<div class="empty-state"><div class="ic">🏷️</div>Anda belum ditugaskan ke kelas manapun. Hubungi Admin.</div>`; return;
+  }
+  body.innerHTML = `
+    <div class="card">
+      <h3>Laporan Harian Santri</h3>
+      <div class="row">
+        <div class="field"><label>Kelas</label><select id="giKelas" onchange="onGuruKelasChange()">${myKelasList().length>1?'<option value="">— Pilih kelas —</option>':''}${kelasOpts}</select></div>
+        <div class="field"><label>Santri</label><select id="giSantri">${santriOpts||'<option value="">Belum ada santri</option>'}</select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Tanggal</label><input type="date" id="giTanggal" value="${todayStr()}"></div>
+      </div>
+      <div class="field">
+        <label>Kehadiran</label>
+        <div class="kehadiran-picker" id="giKehadiran">
+          <button type="button" class="keh-opt sel-hadir" data-v="hadir" onclick="pickKeh(this)">Hadir</button>
+          <button type="button" class="keh-opt" data-v="izin" onclick="pickKeh(this)">Izin</button>
+          <button type="button" class="keh-opt" data-v="sakit" onclick="pickKeh(this)">Sakit</button>
+          <button type="button" class="keh-opt" data-v="alpa" onclick="pickKeh(this)">Alpa</button>
+        </div>
+      </div>
+      <div class="field"><label>Materi / Kegiatan Belajar</label><textarea id="giMateri" placeholder="Contoh: Iqro jilid 2 hal. 10-12, hafalan surat An-Nas"></textarea></div>
+      <div class="card" style="background:var(--paper-alt);box-shadow:none;">
+        <div class="rating-row"><span class="lbl">Hafalan / Capaian Materi</span>${starPicker("hafalan")}</div>
+        <div class="rating-row"><span class="lbl">Akhlak</span>${starPicker("akhlak")}</div>
+        <div class="rating-row"><span class="lbl">Kedisiplinan</span>${starPicker("kedisiplinan")}</div>
+      </div>
+      <div class="field"><label>Catatan untuk Orang Tua</label><textarea id="giCatatan" placeholder="Catatan, pujian, atau hal yang perlu diperhatikan di rumah"></textarea></div>
+      <div id="giErr" class="error-msg"></div>
+      <button class="btn block gold" onclick="submitLaporan()">Simpan Laporan</button>
+    </div>
+  `;
+}
+function starPicker(key){
+  return `<div class="stars" id="star-${key}">${[1,2,3,4,5].map(n=>`<button type="button" class="star-btn" data-k="${key}" data-n="${n}" onclick="setStar('${key}',${n})">★</button>`).join("")}</div>`;
+}
+function setStar(key,n){
+  ratingVals[key]=n;
+  document.querySelectorAll(`#star-${key} .star-btn`).forEach(b=>{
+    b.classList.toggle("on", Number(b.dataset.n)<=n);
+  });
+}
+function pickKeh(btn){
+  document.querySelectorAll("#giKehadiran .keh-opt").forEach(b=>b.className="keh-opt");
+  btn.classList.add("sel-"+btn.dataset.v);
+}
+function onGuruKelasChange(){
+  guruKelasFilter = document.getElementById("giKelas").value;
+  const santriOpts = mySantriList(guruKelasFilter).map(([id,s])=>`<option value="${id}">${esc(s.nama)}</option>`).join("");
+  document.getElementById("giSantri").innerHTML = santriOpts || '<option value="">Belum ada santri</option>';
+}
+async function submitLaporan(){
+  const santriId = document.getElementById("giSantri").value;
+  const tanggal = document.getElementById("giTanggal").value;
+  const kehBtn = document.querySelector("#giKehadiran .keh-opt[class*=sel-]");
+  const kehadiran = kehBtn ? kehBtn.dataset.v : "hadir";
+  const materi = document.getElementById("giMateri").value.trim();
+  const catatan = document.getElementById("giCatatan").value.trim();
+  const err = document.getElementById("giErr");
+  if(!santriId){ err.textContent="Pilih santri terlebih dahulu."; return; }
+  if(!tanggal){ err.textContent="Tanggal wajib diisi."; return; }
+  const data = {
+    santriId, tanggal, kehadiran, materi, catatan,
+    hafalan:ratingVals.hafalan, akhlak:ratingVals.akhlak, kedisiplinan:ratingVals.kedisiplinan,
+    guruId: state.guru.id, guruNama: state.guru.nama, createdAt: Date.now()
+  };
+  try{
+    await fbPost("laporan",data);
+    toast("Laporan berhasil disimpan");
+    await loadAll(); renderGuruInput(document.getElementById("guruTabBody"));
+  }catch(e){ err.textContent="Gagal menyimpan laporan."; }
+}
+
+function renderGuruRiwayat(body){
+  const kelasOpts = myKelasList().map(([id,k])=>`<option value="${id}">${esc(k.nama)}</option>`).join("");
+  const mySantriIds = new Set(Object.entries(cache.santri).filter(([id,s])=>(state.guru.kelasIds||[]).includes(s.kelasId)).map(([id])=>id));
+  const laporanList = Object.entries(cache.laporan)
+    .filter(([id,l])=>mySantriIds.has(l.santriId))
+    .sort((a,b)=> (b[1].tanggal||"").localeCompare(a[1].tanggal||"") || b[1].createdAt-a[1].createdAt);
+  body.innerHTML = `
+    <div class="card">
+      <div class="section-title"><h3>Riwayat Laporan</h3></div>
+      <div class="row"><div class="field"><label>Filter Kelas</label><select id="grKelas" onchange="drawGuruRiwayatList()"><option value="">Semua kelas</option>${kelasOpts}</select></div></div>
+      <div id="grList"></div>
+    </div>`;
+  window._guruLaporanList = laporanList;
+  drawGuruRiwayatList();
+}
+function drawGuruRiwayatList(){
+  const kelasF = document.getElementById("grKelas")?.value || "";
+  const list = window._guruLaporanList.filter(([id,l])=>{
+    if(!kelasF) return true;
+    const s = cache.santri[l.santriId];
+    return s && s.kelasId===kelasF;
+  });
+  const html = list.map(([id,l])=>{
+    const s = cache.santri[l.santriId] || {nama:"(dihapus)"};
+    return `
+    <div class="list-item">
+      <div class="item-top"><span class="item-title">${esc(s.nama)}</span><span class="item-date">${fmtDate(l.tanggal)}</span></div>
+      <div class="item-meta"><span class="badge ${l.kehadiran}">${kehLabel(l.kehadiran)}</span> &nbsp;${esc(l.materi||"-")}</div>
+      <div class="item-meta">⭐ Hafalan ${l.hafalan||0}/5 • Akhlak ${l.akhlak||0}/5 • Disiplin ${l.kedisiplinan||0}/5</div>
+      ${l.catatan?`<div class="item-meta">📝 ${esc(l.catatan)}</div>`:""}
+      <div class="item-actions"><button class="btn sm danger" onclick="deleteLaporan('${id}')">Hapus</button></div>
+    </div>`;
+  }).join("") || `<div class="empty-state"><div class="ic">🗒️</div>Belum ada laporan.</div>`;
+  document.getElementById("grList").innerHTML = html;
+}
+async function deleteLaporan(id){
+  if(!confirm("Hapus laporan ini?")) return;
+  await fbDelete(`laporan/${id}`); toast("Laporan dihapus"); await loadAll(); renderGuruRiwayat(document.getElementById("guruTabBody"));
+}
+
+function renderGuruKeluhan(body){
+  const mySantriIds = new Set(Object.entries(cache.santri).filter(([id,s])=>(state.guru.kelasIds||[]).includes(s.kelasId)).map(([id])=>id));
+  const list = Object.entries(cache.keluhan).filter(([id,k])=>mySantriIds.has(k.santriId)).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  const html = list.map(([id,k])=>{
+    const s = cache.santri[k.santriId] || {nama:"(dihapus)"};
+    return `
+    <div class="list-item">
+      <div class="item-top"><span class="item-title">${esc(s.nama)} <span class="badge ${k.status==='Dibalas'?'dibalas':'baru'}">${k.status==='Dibalas'?'Sudah Dibalas':'Baru'}</span></span><span class="item-date">${fmtDate(k.tanggal)}</span></div>
+      <div class="item-meta">Kategori: ${esc(k.kategori)}</div>
+      <div class="item-meta">💬 ${esc(k.isi)}</div>
+      ${k.balasan?`<div class="item-meta" style="color:var(--green-light);">↳ Balasan: ${esc(k.balasan)}</div>`:`
+      <div class="field" style="margin-top:10px;"><textarea id="reply-${id}" placeholder="Tulis balasan untuk orang tua..."></textarea></div>
+      <button class="btn sm gold" onclick="sendReply('${id}')">Kirim Balasan</button>`}
+    </div>`;
+  }).join("") || `<div class="empty-state"><div class="ic">💬</div>Belum ada keluhan atau saran dari orang tua.</div>`;
+  body.innerHTML = `<div class="card"><h3>Keluhan &amp; Saran Orang Tua</h3>${html}</div>`;
+}
+async function sendReply(id){
+  const balasan = document.getElementById(`reply-${id}`).value.trim();
+  if(!balasan){ toast("Isi balasan tidak boleh kosong",false); return; }
+  await fbPatch(`keluhan/${id}`,{balasan, status:"Dibalas", balasanOleh:state.guru.nama, balasanAt:Date.now()});
+  toast("Balasan terkirim"); await loadAll(); renderGuruKeluhan(document.getElementById("guruTabBody"));
+}
+
+/* ============================================================
+   ORANG TUA DASHBOARD
+   ============================================================ */
+let ortuTab="riwayat";
+async function renderOrtuDash(){
+  await loadAll();
+  const s = cache.santri[state.santri.id] || state.santri;
+  render(`
+    <div class="notebook-card">
+      <h2>${esc(s.nama)}</h2>
+      <div class="item-meta">${esc(cache.kelas[s.kelasId]?.nama||"-")} • Wali: ${esc(s.namaOrtu||"-")}</div>
+    </div>
+    <div class="tabbar">
+      <button class="tab-btn ${ortuTab==='riwayat'?'active':''}" onclick="switchOrtuTab('riwayat')">Riwayat Belajar</button>
+      <button class="tab-btn ${ortuTab==='kirim'?'active':''}" onclick="switchOrtuTab('kirim')">Kirim Keluhan/Saran</button>
+      <button class="tab-btn ${ortuTab==='pesan'?'active':''}" onclick="switchOrtuTab('pesan')">Pesan Saya</button>
+    </div>
+    <div id="ortuTabBody"></div>
+  `);
+  drawOrtuTab();
+}
+function switchOrtuTab(t){ ortuTab=t; drawOrtuTab(); }
+function drawOrtuTab(){
+  const body=document.getElementById("ortuTabBody");
+  if(ortuTab==="riwayat") return renderOrtuRiwayat(body);
+  if(ortuTab==="kirim") return renderOrtuKirim(body);
+  if(ortuTab==="pesan") return renderOrtuPesan(body);
+}
+function renderOrtuRiwayat(body){
+  const list = Object.entries(cache.laporan).filter(([id,l])=>l.santriId===state.santri.id)
+    .sort((a,b)=>(b[1].tanggal||"").localeCompare(a[1].tanggal||"") || b[1].createdAt-a[1].createdAt);
+  const html = list.map(([id,l])=>`
+    <div class="notebook-card">
+      <div class="item-top"><span class="item-date">${fmtDate(l.tanggal)}</span><span class="badge ${l.kehadiran}">${kehLabel(l.kehadiran)}</span></div>
+      <div class="item-meta"><b>Materi:</b> ${esc(l.materi||"-")}</div>
+      <div class="rating-row"><span class="lbl">Hafalan</span>${renderStarsView(l.hafalan)}</div>
+      <div class="rating-row"><span class="lbl">Akhlak</span>${renderStarsView(l.akhlak)}</div>
+      <div class="rating-row"><span class="lbl">Kedisiplinan</span>${renderStarsView(l.kedisiplinan)}</div>
+      ${l.catatan?`<div class="item-meta">📝 <i>${esc(l.catatan)}</i></div>`:""}
+      <div class="item-meta" style="margin-top:6px;color:var(--ink-soft);">Dicatat oleh: ${esc(l.guruNama||"-")}</div>
+    </div>`).join("") || `<div class="empty-state"><div class="ic">🗒️</div>Belum ada laporan dari guru.</div>`;
+  body.innerHTML = `
+    <div class="section-title"><h3 style="margin:0;">Riwayat Kegiatan Belajar</h3>${list.length?'<button class="btn sm secondary" onclick="exportOrtuPDF()">⬇ Unduh PDF</button>':''}</div>
+    ${html}`;
+  window._ortuLaporanList = list;
+}
+function renderStarsView(n){
+  n=n||0;
+  return `<div class="stars">${[1,2,3,4,5].map(i=>`<span class="star-btn ${i<=n?'on':''}">★</span>`).join("")}</div>`;
+}
+function renderOrtuKirim(body){
+  body.innerHTML = `
+    <div class="card">
+      <h3>Kirim Keluhan atau Saran</h3>
+      <div class="field"><label>Kategori</label>
+        <select id="okKategori"><option>Keluhan</option><option>Saran</option><option>Pertanyaan</option></select>
+      </div>
+      <div class="field"><label>Isi Pesan</label><textarea id="okIsi" placeholder="Tuliskan keluhan, saran, atau pertanyaan Anda mengenai perkembangan anak..."></textarea></div>
+      <div id="okErr" class="error-msg"></div>
+      <button class="btn block gold" onclick="submitKeluhan()">Kirim ke Guru</button>
+    </div>`;
+}
+async function submitKeluhan(){
+  const kategori = document.getElementById("okKategori").value;
+  const isi = document.getElementById("okIsi").value.trim();
+  if(!isi){ document.getElementById("okErr").textContent="Isi pesan tidak boleh kosong."; return; }
+  const data = {santriId:state.santri.id, tanggal:todayStr(), kategori, isi, dariNama:state.santri.namaOrtu||"Orang Tua", status:"Baru", createdAt:Date.now()};
+  try{
+    await fbPost("keluhan",data);
+    toast("Pesan berhasil dikirim ke guru");
+    document.getElementById("okIsi").value="";
+    await loadAll();
+  }catch(e){ document.getElementById("okErr").textContent="Gagal mengirim pesan."; }
+}
+function renderOrtuPesan(body){
+  const list = Object.entries(cache.keluhan).filter(([id,k])=>k.santriId===state.santri.id).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+  const html = list.map(([id,k])=>`
+    <div class="list-item">
+      <div class="item-top"><span class="item-title">${esc(k.kategori)} <span class="badge ${k.status==='Dibalas'?'dibalas':'baru'}">${k.status==='Dibalas'?'Sudah Dibalas':'Menunggu'}</span></span><span class="item-date">${fmtDate(k.tanggal)}</span></div>
+      <div class="item-meta">💬 ${esc(k.isi)}</div>
+      ${k.balasan?`<div class="item-meta" style="color:var(--green-light);">↳ Balasan dari ${esc(k.balasanOleh||'guru')}: ${esc(k.balasan)}</div>`:`<div class="item-meta" style="color:var(--ink-soft);">Menunggu balasan guru...</div>`}
+    </div>`).join("") || `<div class="empty-state"><div class="ic">💬</div>Anda belum mengirim pesan apapun.</div>`;
+  body.innerHTML = `<div class="card"><h3>Pesan Saya</h3>${html}</div>`;
+}
+function exportOrtuPDF(){
+  const s = cache.santri[state.santri.id];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  let y=18;
+  doc.setFont("helvetica","bold"); doc.setFontSize(15);
+  doc.text("Riwayat Buku Penghubung", 14, y); y+=8;
+  doc.setFontSize(10); doc.setFont("helvetica","normal");
+  doc.text(`Santri: ${s.nama}   Kelas: ${cache.kelas[s.kelasId]?.nama||"-"}`, 14, y); y+=10;
+  window._ortuLaporanList.forEach(([id,l])=>{
+    if(y>270){ doc.addPage(); y=18; }
+    doc.setFont("helvetica","bold"); doc.text(`${fmtDate(l.tanggal)} — ${kehLabel(l.kehadiran)}`,14,y); y+=6;
+    doc.setFont("helvetica","normal");
+    const materi = doc.splitTextToSize(`Materi: ${l.materi||"-"}`,180); doc.text(materi,14,y); y+=materi.length*5;
+    doc.text(`Hafalan ${l.hafalan||0}/5  Akhlak ${l.akhlak||0}/5  Disiplin ${l.kedisiplinan||0}/5`,14,y); y+=6;
+    if(l.catatan){ const c=doc.splitTextToSize(`Catatan: ${l.catatan}`,180); doc.text(c,14,y); y+=c.length*5; }
+    y+=4;
+  });
+  doc.save(`riwayat-${s.nama.replace(/\s+/g,'_')}.pdf`);
+}
+
+init();
+</script>
+</body>
+</html>
